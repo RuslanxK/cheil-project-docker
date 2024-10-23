@@ -1,0 +1,52 @@
+version: "3.8"
+
+services:
+  mongo:
+    image: mongo:7.0.12
+    ports: 
+      - "27017:27017"
+    volumes:
+      - mongo_data:/data/db
+    networks:
+      - mern-app
+
+  api: 
+    build: 
+      context: ./be
+      target: development
+    restart: "unless-stopped"
+    env_file: ./be/.env
+    volumes:
+      - ./be:/app
+      - /app/node_modules
+    networks:
+      - mern-app
+    ports:
+      - "8000:8000"
+    depends_on:
+      - mongo
+
+  frontend: 
+   build:
+    context: ./fe
+    target: development
+   restart: "unless-stopped"
+   env_file: "./fe/.env"
+   volumes:
+     - ./fe:/app
+     - /app/node_modules
+   networks: 
+     - mern-app
+   ports: 
+     - 5173:5173
+   command: npm run dev -- --host
+
+   depends_on:
+      - api
+
+volumes:
+  mongo_data:
+
+networks:
+  mern-app: 
+    driver: bridge

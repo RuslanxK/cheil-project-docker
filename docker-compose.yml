@@ -1,0 +1,55 @@
+version: "3.8"
+
+services:
+  mongo:
+    image: mongo:7.0.12
+    volumes:
+      - mongo_data:/data/db
+    networks:
+      - mern-app
+
+  api: 
+    build: 
+      context: ./be
+      target: production
+    restart: "unless-stopped"
+    env_file: ./be/.env
+    networks:
+      - mern-app
+    depends_on:
+      - mongo
+
+  frontend: 
+   build:
+    context: ./fe
+    target: production
+   restart: "unless-stopped"
+   networks: 
+     - mern-app
+   depends_on:
+      - api
+
+  caddy: 
+    image: caddy:2-alpine
+    ports:
+      - 80:80
+      - 443:443
+    volumes:
+      - ./caddy/Caddyfile:/etc/caddy/Caddyfile
+      - caddy_data:/data
+      - caddy_config:/config
+
+    networks:
+      - mern-app
+    depends_on:
+      - frontend
+      - api
+
+volumes:
+  mongo_data:
+  caddy_data:
+  caddy_config:
+
+networks:
+  mern-app: 
+    driver: bridge
