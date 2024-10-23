@@ -30,6 +30,8 @@ services:
    build:
     context: ./fe
     target: development
+    args:
+     VITE_API_URL: https://api.auth.localhost
    restart: "unless-stopped"
    env_file: "./fe/.env"
    volumes:
@@ -42,6 +44,22 @@ services:
    command: npm run dev -- --host
 
    depends_on:
+      - api
+
+  caddy: 
+    image: caddy:2-alpine
+    ports:
+      - 80:80
+      - 443:443
+    volumes:
+      - ./caddy/Caddyfile.dev:/etc/caddy/Caddyfile
+      - caddy_data:/data
+      - caddy_config:/config
+
+    networks:
+      - mern-app
+    depends_on:
+      - frontend
       - api
 
 volumes:
